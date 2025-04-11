@@ -1,0 +1,6 @@
+auto_mix_prep==0.2.0
+deep_translator==1.11.4
+numpy==2.2.4
+pandas==2.2.3
+spellchecker==0.4
+xlwings==0.33.11

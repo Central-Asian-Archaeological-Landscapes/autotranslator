@@ -11,11 +11,7 @@ import xlwings as xw
 import pandas as pd
 import fnmatch as fn
 import os
-from src.sqlanalysis import SQLite
-import sqlite3 as lite
-import src.spellcheck as spellcheck
 import csv
-import tkinter as tk
 import traceback
 
 class TranslMethods:
@@ -38,7 +34,7 @@ class TranslMethods:
     resett = False
     txt_lst = [err_txt, ldat_txt, extr_txt, chk_txt, counter1_txt, chk2_txt, counter2_txt, com_txt, ent_txt, chk3_txt]
     
-    def update(self, err, ldat, extr, chk, counter1, chk2, counter2, com, ent, chk3, windowx): #function to allow window to continue updating
+    def update(self, err, ldat, extr, chk, counter1, chk2, counter2, com, ent, chk3): #function to allow window to continue updating
         err.config(text = self.err_txt)
         ldat.config(text = self.ldat_txt)
         extr.config(text = self.extr_txt)
@@ -49,7 +45,6 @@ class TranslMethods:
         com.config(text = self.com_txt)
         ent.config(text = self.ent_txt)
         chk3.config(text = self.chk3_txt)
-        windowx.after(1000, self.update, err, ldat, extr, chk, counter1, chk2, counter2, com, ent, chk3, windowx)
         
     def load_data(self, filename, input_sheet, column_names, start_row, max_row):
         print('Now translating' + str(filename))
@@ -61,6 +56,9 @@ class TranslMethods:
         self.rows = rows
         
         self.ldat_txt = 'The length of data is ' + str(rows) + ' rows. The starting row is ' + str(start_row) +'\n'
+        print(self.ldat_txt)
+        
+        
         
         skipline = int(start_row) - 1 #this is done b/c pd starts with 0-index so 0 = 1st line, etc. and we want to skip the lines before the start row (so if starting row is 5 we want to skip 4 lines (0,1,2,3)
         data = pd.read_excel(filename, input_sheet, header=None, names=column_names, usecols=col, skiprows = skipline, nrows = rows) #looked at pandas documentation for how to work with excel
@@ -77,14 +75,45 @@ class TranslMethods:
         self.names = names #sets it so can be referenced outside of the function
         #print(names.columns) #as a check - it works
         self.extr_txt = 'Data extracted'
-        
+        print(self.extr_txt)
         print(self.untranslated)
+        
     def line_by_line(self):
         '''A function to make the program quicker by calling the data check translation and input functions
         for each line rather than doing it all at once'''
+    
+    def create_glossary(self, ilang, glossfile): 
         
+        '''
+        here we need to create a dictionary which the untranslated data can be compared against using the thesaurus spreadsheet developed by CAAL. The ditionary is created by using pandas to read the spreadsheet
+        and make a dataframe of it, converting it to a CSV file as for some reason the Russian here did not want to encode otheriwse, and creating a dictionary with the Russian words set as keys and the English words
+        as values; this means that strings can then be compared against the keys to see if they are present, and then substitute the keys for the values.
         
-    def data_check(self, ilang, olang, filetype):
+        '''
+        
+        project_folder = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0] #splits path from the directory name to the main module being opened here
+         #joins the main module path with that of data folder so it can be accessed
+        #various StackOverflow queries helped with understanding errors that were arising here, particularly in terms of encoding
+        if ilang == 'ru':
+            
+            rus = pd.read_excel(glossfile, usecols = 'B:C')#uses pandas to read excel file extracting columns B to C (Russian and English)
+            rus.to_csv("Rusgloss.csv", index = None, header=True) #converts excel to csv because otherwise there are encoding issues that cannot be addressed in pandas read_excel because it removed ability to specify encoding
+            rusdf = pd.DataFrame(pd.read_csv("Rusgloss.csv", encoding = 'utf-8')) #reads created csvfile to dataframe specifying the encoding so the Russian characters are read properly
+            russgloss = rusdf.set_index('Russian').T.to_dict('list')
+            #print(russgloss)
+            self.russgloss = russgloss #sets it so it can be referred
+            print('Russian glossary created')
+            return russgloss
+        elif ilang == 'zh_CN':
+            cn = pd.read_excel(glossfile, usecols = 'C:D')
+            cn.to_csv('Chinese_gloss.csv', index = None, header = True)
+            cndf = pd.dataframe(pd.read_csv('Russgloss.csv', encoding = 'utf-8'))
+            cngloss = cndf.set_index('Chinese').T.to_dict('list')
+            self.cngloss = cngloss
+            print('Chinese glossary created')
+            return cngloss
+        
+    def data_check(self, ilang, olang, filetype, glossfile):
         '''
         This function is to check the untranslated data, both for spelling using spellcheck function and against the dictionary created in create_glossary (thesaurus of CAAL terms) 
         so that terms which appear in the Russian glossary (keys) are replaced by the English values in each string. This is done to avoid inconsistent Google Translate translations, 
@@ -101,16 +130,15 @@ class TranslMethods:
         
         '''
         print(str(ilang) + ' ' + str(olang))
-        spell = spellcheck.Spelling()
         
         if str(ilang) == 'ru' and str(olang) == 'en':
-            gloss = spell.create_glossary(ilang)
+            gloss = self.create_glossary(ilang, glossfile)
         elif str(ilang) == 'zh_CN' and str(olang) == 'en':
-            gloss = spell.create_glossary(ilang)
+            gloss = self.create_glossary(ilang, glossfile)
         elif str(olang) == 'ru' and str(ilang) == 'en':
-            gloss = spell.create_glossary(olang)
+            gloss = self.create_glossary(olang, glossfile)
         elif str(olang) == 'zh_CN' and str(ilang) == 'en':
-            gloss = spell.create_glossary(olang)
+            gloss = self.create_glossary(olang, glossfile)
         else:
             gloss = {'1':['1']}
         
@@ -135,6 +163,7 @@ class TranslMethods:
                 self.checked_untrans.append(un)
                 n=n+1
                 self.counter1_txt = str(n) + ' entries checked'
+                print(self.counter1_txt)
             elif str(un) == 'nan':
                 self.checked_untrans.append('N/A')
             else:
@@ -142,13 +171,12 @@ class TranslMethods:
                 reps = []
                 pats = [] #creates lists for replacements and patterns that are found through the check against the glossary
                 
-                check_un = spell.spell_checker(filetype, ilang, un, gloss)
                 #print('working on it')
                 if ilang == 'ru' and olang == 'en':
                     for key in gloss: #for each key in the russian glossary dictionary - so for each Russian term
                         pattern = '*' + str(key).lower() + '*' #the pattern is * wildcard character + the key + * - so it matches wherever the key may be present in the string. Fnmatch is used so * is accepted as a wildcard
                         replacement = str(gloss[key]).lower()[2:-2] #the replacement string which contains the English translation of the Russian key - lowercased as the whole string will be
-                        if fn.fnmatch(check_un, str(pattern)) == True: #fnmatch automatically casematches, so lowers un and the pattern - if there is a match, so if boolean = True
+                        if fn.fnmatch(un, str(pattern)) == True: #fnmatch automatically casematches, so lowers un and the pattern - if there is a match, so if boolean = True
                             reps.append(str(replacement)) #then append the replacement value to reps
                             pats.append(str(key).lower()) #and append the Russian word (which has a match) to pats - so the two still correspond with each other by index - lowercased as the rest of the string will be so if it isn't it won't get a match
                             continue
@@ -156,25 +184,25 @@ class TranslMethods:
                             continue
                     
                     for i in range(0, int(int(len(pats)) - 1)): #if i = 0 to the length of pats (-1 because len starts from 1 while index starts from 0)
-                        check_un = check_un.lower().replace(pats[i], reps[i]) #un becomes the lowercased string, with the pattern replaced
+                        un = un.lower().replace(pats[i], reps[i]) #un becomes the lowercased string, with the pattern replaced
                         
                 elif olang == 'ru' and ilang == 'en':
                     
                     for key in gloss:
                         pattern = '*' + str(gloss[key]).lower() + '*'
                         replacement = str(key).lower()[2:-2]
-                        if fn.fnmatch(check_un.lower(), str(pattern)) == True: #fnmatch automatically casematches, so lowers un and the pattern - if there is a match, so if boolean = True
+                        if fn.fnmatch(un.lower(), str(pattern)) == True: #fnmatch automatically casematches, so lowers un and the pattern - if there is a match, so if boolean = True
                             reps.append(str(replacement)) #then append the replacement value to reps
                             pats.append(str(gloss[key]).lower()) #and append the Russian word (which has a match) to pats - so the two still correspond with each other by index - lowercased as the rest of the string will be so if it isn't it won't get a match
                             continue
                         else: #otherwise reset the loop and continue
                             continue
                     for i in range(0, int(len(pats) - 1)): #if i = 0 to the length of pats (-1 because len starts from 1 while index starts from 0)
-                        check_un = check_un.lower().replace(pats[i], reps[i]) #un becomes the lowercased string, with the pattern replaced
+                        un = check_un.lower().replace(pats[i], reps[i]) #un becomes the lowercased string, with the pattern replaced
                 else:
                     pass
                 
-                nu = check_un.replace('.,', ',') #removes duplicated punctuation which can appear after the data check
+                nu = un.replace('.,', ',') #removes duplicated punctuation which can appear after the data check
                 newstring = nu.replace('..', '.') #removes duplicated punctuation appearing after data check
     
                 '''
@@ -214,10 +242,12 @@ class TranslMethods:
                     self.checked_untrans.append(fin) #appends to checked untranslated
                     n=n+1
                     self.counter1_txt = str(n) + ' entries checked'
+                    print(self.counter1_txt)
                 
     def translator (self, ilanguage, olanguage):
         
         self.chk2_txt = 'Now translating - this can take a while, make a cup of tea :)'
+        print(self.chk2_txt)
         try:
             n=0
             for i in self.checked_untrans: #for strings in untranslated
@@ -227,6 +257,7 @@ class TranslMethods:
                 self.translated.append(transltxt)
                 n= n+1
                 self.counter2_txt = str(n) + ' entries translated'
+                print(self.counter2_txt)
                  #so progress can be checked - and can see if it gets stuck on any particular entries
                 #print(transltxt) #optional - can uncheck to see the translated results
                 #print('translating2')
@@ -246,10 +277,11 @@ class TranslMethods:
         This function is for columns like Location Notes, where the English translation is input in the same entry underneath the Russian data rather than in its own column. So we need to combine
         the untranslated and translated data into one entry, which can then be input into the column
         '''
-        combine = False
+        combine = True
         self.combine = combine
         if input_column in column_names: #if the input_column is also in column_names aka if data is being extracted from the same column that it should be put back into - so there is both Russian and English in the entry
             self.com_txt = 'Combining data from ' + str(column_names)
+            print(self.com_txt)
             
             for i in self.untranslated:
                 if str(i).lower() == 'nan':
@@ -281,6 +313,7 @@ class TranslMethods:
         sheet=wb.sheets[input_sheet] #sheet accesses the sheets from the workbook (using the input_sheet) #allows user to input column (varies based on
         #query and spreadsheet)
         self.ent_txt = 'Entering data into spreadsheet'
+        print(self.ent_txt)
         
         i = 0  
         for row in range(int(start_row), int(len(self.translated)) + 1): #for row in the range of starting row to max_row
@@ -293,35 +326,12 @@ class TranslMethods:
                 sheet.range(cell).value = self.combineddata[i]
             i = i + 1 #i adds 1 to iterate through the list  
             self.chk3_txt = str(i) + ' entries input'
+            print(self.chk3_txt)
                 #this prevents the already-inputted cell values from being overwritten by future iterations
                 
         wb.save() #saves the changes
         wb.close() #closes the workbook to allow next columns to be translated
         
-    def sql_work(self, filename, folder, input_sheet, tables, data_cols, max_row):
-        '''
-        This module takes the translated data from the file we are working in (called after input_data), and extracts it to a dataframe. Each row in the dataframe is tehn added
-        '''
-        slite = SQLite(folder)
-        
-        data = pd.read_excel(filename, input_sheet, header=0, usecols=data_cols, nrows = self.rows)
-        data.to_csv('SQLdata.csv')
-        csvname = 'SQLdata.csv'
-        pn = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0] 
-        
-        csvfile = open(os.path.join(pn, 'src', csvname), 'r',encoding="UTF-8")
-        '''csvfile defined as open the joined path of data_folder and the csvname'''
-        reader = csv.reader(csvfile)
-    
-        for t in tables:
-            if str(t[ :7]).lower() in str(filename).lower():
-                for i in reader: #for each row (i) in the csvfile "Seals.csv" (reader)
-                    #skip the heading row
-                    if reader.line_num == 1:
-                        continue
-                    slite.insert_row(t, i)    
-            else:
-                continue
             
     def reset(self): #resets the function so there are no leftover values in the lists for the future values
         self.untranslated.clear() #clears the untranslated list
@@ -342,9 +352,9 @@ class TranslMethods:
 class TranslateRun: #the class to run the above methods
     transl = TranslMethods() #transl is the TranslMethods class
         
-    def runn(self, filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype): #the whole translation and SQL input process with the associated variables
+    def runn(self, filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile): #the whole translation and SQL input process with the associated variables
         self.transl.load_data(filename, input_sheet, column_names, start_row, max_row)
-        self.transl.data_check(ilanguage, olanguage, filetype)
+        self.transl.data_check(ilanguage, olanguage, filetype, glossfile)
         self.transl.translator(ilanguage, olanguage)
         self.transl.combinedata(column_names, input_column)
         self.transl.input_data(filename, input_sheet, input_column, start_row, max_row)
@@ -353,71 +363,13 @@ class TranslateRun: #the class to run the above methods
         self.transl.sql_work(filename, folder, input_sheet, tables, data_cols, max_row)
         
     
-    def runtransl(self, filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, windowx, filetype):
+    def runtransl(self, filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile):
 
-        framea = tk.Frame(master=windowx, width = 150, height=100, padx=5, pady=5)
-        framea.pack(fill = tk.X, side=tk.TOP)
-        
-        frameb = tk.Frame(master=windowx, width = 150, height = 100, padx=5, pady=5)
-        frameb.pack(fill=tk.X, side = tk.TOP)
-        
-        framec = tk.Frame(master=windowx, width = 150, height = 100, padx=5, pady=5)
-        framec.pack(fill=tk.X, side = tk.TOP) 
-        
-        fl = tk.Label(master=framea, text = 'Now translating: ' + str(filename) + '\n Columns: ' + str(column_names) +'-->' + str(input_column))
-        fl.pack(fill = tk.X, side = tk.TOP)
-        
-        note = tk.Label(master=framea, text = 'Note: If file contains forms/macros you will need to manually close/log into these when they pop-up during entry')
-        note.pack(fill = tk.X, side = tk.TOP)
-        
-        err = tk.Label(master=framea, text = '...')
-        err.pack(fill=tk.X, side = tk.TOP)
-        
-        ldat = tk.Label(master=framea, text = '...')
-        ldat.pack(fill = tk.X, side = tk.BOTTOM)
-    
-        extr = tk.Label(master=framea, text = '...')
-        extr.pack(fill = tk.X, side = tk.TOP)
-        
-        chk = tk.Label(master=frameb, text = '...')
-        chk.pack(fill=tk.X, side = tk.TOP)
-        
-        counter1 = tk.Label(master=frameb, text = '...')
-        counter1.pack(fill=tk.X, side = tk.BOTTOM)
-        
-        framed = tk.Frame(master=windowx, width = 150, height=100, padx=5, pady=5)
-        framed.pack(fill = tk.X, side=tk.TOP)
-        
-        framee = tk.Frame(master=windowx, width = 150, height=100, padx=5, pady=5)
-        framee.pack(fill = tk.X, side=tk.TOP)
-        
-        framef = tk.Frame(master=windowx, width = 150, height=100, padx=5, pady=5)
-        framef.pack(fill = tk.X, side=tk.TOP)
-        
-        chk2 = tk.Label(master=framec, text='...')
-        chk2.pack(fill=tk.X, side = tk.TOP)
-             
-        counter2 = tk.Label(master=framec, text = '...')
-        counter2.pack(fill=tk.X, side = tk.BOTTOM)
-        
-        com = tk.Label(master=framed, text = '...')
-        com.pack(fill=tk.X, side = tk.BOTTOM)
-    
-        ent = tk.Label(master=framee, text = '...')
-        ent.pack(fill = tk.X, side = tk.TOP)
-        
-        chk3 = tk.Label(master=framee, text = '...')
-        chk3.pack(fill = tk.X, side = tk.BOTTOM)
+        print('Now translating: ' + str(filename) + '\n Columns: ' + str(column_names) +'-->' + str(input_column))
+        print('Note: If file contains forms/macros you will need to manually close/log into these when they pop-up during entry')
         
         
-        windowx.after(1000, self.transl.update, err, ldat, extr, chk, counter1, chk2, counter2, com, ent, chk3, windowx)
-        self.runn(filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype)
-        framea.forget()
-        frameb.forget()
-        framec.forget()
-        framed.forget()
-        framee.forget()
-        framef.forget()
+        self.runn(filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile)
         self.transl.reset()
     
         
