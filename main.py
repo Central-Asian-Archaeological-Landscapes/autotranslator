@@ -3,7 +3,7 @@ Created on 19 Jun 2022
 
 @author: turch
 '''
-from run import run
+from set_parameters import Begin
 import threading
 
 def init(self):

@@ -12,13 +12,29 @@ import traceback
 import threading
 
 
-class loadFolders: #creates a class to load folders within the given path for translation of all files within that folder
+class LoadFolders: #creates a class to load folders within the given path for translation of all files within that folder
     archive = [] #creates list for archive spreadsheets
     monument = [] #and list for monument ones
     docs = []
     biglist = [archive, monument] #biglist for the two above lists so they can be cycled through
     l = None
     
+    def sortfolder(self, data_path, filetype, folder):
+        if '.xl' in str(data_path):
+            folder.append(str(data_path))
+        else:
+            for data_path, subdirs, files in os.walk(data_path):
+                for f in files:
+                    file_path = os.path.join(data_path, f)
+                    folder.append(str(file_path))
+                for s in subdirs:
+                    subdir_path = os.path.join(data_path, s)
+                    print(subdir_path)
+                    for f in files: #for the directory, subdirectories, and files in the directory path
+                        file_path = os.path.join(subdir_path, f) #join file name with the directory path as file path
+                        print(file_path)
+                        folder.append(str(file_path)) #and append that to the archive list 
+
     def openfolder(self, data_path, filetype): 
         '''
         This function is the first to be executed in the program as it locates the folders from the specified data path, accesses the files within them, and extracts the file paths to the specified lists (optional ultimately
@@ -32,73 +48,28 @@ class loadFolders: #creates a class to load folders within the given path for tr
             
         if filetype == 'Excel':
                 if 'archive' in str(data_path).lower():
-                    #print('i')
-                    if '.xl' in str(data_path):
-                        self.archive.append(str(data_path))
-                    for data_path, subdirs, files in os.walk(data_path):
-                        for f in files:
-                            file_path = os.path.join(data_path, f)
-                            self.archive.append(str(file_path))
-                        for s in subdirs:
-                            subdir_path = os.path.join(data_path, s)
-                            print(subdir_path)
-                            for f in files: #for the directory, subdirectories, and files in the directory path
-                                file_path = os.path.join(subdir_path, f) #join file name with the directory path as file path
-                                print(file_path)
-                                self.archive.append(str(file_path)) #and append that to the archive list 
-            
+                    folder = self.archive
+                    self.sortfolder(data_path,filetype,folder)
+                    
                 elif 'monument' in str(data_path).lower():
-                    #print('x')
-                    if '.xl' in str(data_path):
-                        self.monument.append(str(data_path))
-                    else:
-                        for data_path, subdirs, files in os.walk(data_path):
-                            for f in files:
-                                file_path = os.path.join(data_path, f)
-                                self.monument.append(str(file_path))
-                            for s in subdirs:
-                                subdir_path = os.path.join(data_path, s)
-                                print(subdir_path)
-                                for f in files: #for the directory, subdirectories, and files in the directory path
-                                    file_path = os.path.join(subdir_path, f) #join file name with the directory path as file path
-                                    print(file_path)
-                                    self.monument.append(str(file_path)) #and append that to the archive list 
-                        
+                    folder = self.monument
+                    sortfolder(data_path, filetype, folder)
                         
                 else:
-                        for data_path, subdirs, files in os.walk(data_path):
-                            for s in subdirs: #for each subdirectory
-                                dirpath = os.path.join(data_path, s) #creates a directory path to add the file name to for a complete file path
-                                print(dirpath)
-                                if 'archive' in str(dirpath).lower(): #if 'ARCHIVE' is in the subdirectory name
-                                    for dirpath, subdirs, files in os.walk(dirpath): #for the directory, subdirectories, and files in the directory path
-                                        for f in files:
-                                            file_path = os.path.join(dirpath, f)
-                                            if str(file_path) in self.archive:
-                                                pass
-                                            else:
-                                                self.archive.append(file_path)
-                                            
-                                        '''
-                                        for s in subdirs:
-                                           subdir_path = os.path.join(dirpath, s)
-                                           for file in files: #for each file
-                                               file_path = os.path.join(subdir_path,file) #join file name with the directory path as file path
-                                               print(file_path)
-                                               self.archive.append(str(file_path)) #and append that to the archive list
-                                               '''
-                                            
-                                elif 'monument' in str(dirpath).lower(): #otherwise if 'MONUMENT' is in the subdirectory path:
-                                    for dirpath, subdirs, files in os.walk(dirpath): #do the exact same process but append it to the monument list instead
-                                        for f in files:
-                                            file_path = os.path.join(dirpath, f)
-                                            if str(file_path) in self.monument:
-                                                pass
-                                            else:
-                                                self.monument.append(file_path)
-                                            
-                                else: #otherwise continue
-                                    pass
+                    for data_path, subdirs, files in os.walk(data_path):
+                        for s in subdirs: #for each subdirectory
+                            dirpath = os.path.join(data_path, s) #creates a directory path to add the file name to for a complete file path
+                            print(dirpath)
+                            if 'archive' in str(dirpath).lower(): #if 'ARCHIVE' is in the subdirectory name
+                                folder = self.archive
+                                self.sortfolder(dirpath, filetype, folder)
+                                        
+                            elif 'monument' in str(dirpath).lower(): #otherwise if 'MONUMENT' is in the subdirectory path:
+                                folder = self.monument
+                                self.sortfolder(dirpath, filetype, folder)
+                                
+                            else: #otherwise continue
+                                pass
         else:
             if '.docx' in str(data_path) or '.pdf' in str(data_path):
                 self.docs.append(data_path)
@@ -121,7 +92,7 @@ class loadFolders: #creates a class to load folders within the given path for tr
                             self.docs.append(str(file_path))
                     
              
-    def runtransl(self, ilanguage, olanguage, data_path, filetype): #runs the translation methods defined in the translate module
+    def runtransl(self, ilanguage, olanguage, data_path, filetype, glossfile): #runs the translation methods defined in the translate module
 
         def alterfile():
             global remove #so remove can be called elsewhere
@@ -134,6 +105,16 @@ class loadFolders: #creates a class to load folders within the given path for tr
             reset = ResetGUI()
             window.destroy()
             reset.restart()
+            
+        def show_folders(l, type):
+            print('length ' + str(len(l)))
+            self.l = l
+            print('The folder being translated is ' + str(type) + '. The files in this folder are:') #create label widget saying that and listing files
+            for f in l: #for each entry in l
+                n = int(l.index(f)) + 1
+                name = str(str(n) + '. ' + str(f)) #file name is the path + number beforehand
+                print(name)  #creates label so files are listed
+                            
         
         if len(self.archive) == 0 and len(self.monument) == 0 and len(self.docs) == 0:
             print('Empty input! Did you select the wrong filetype or put in an invalid path? Reset and try again.')
@@ -143,38 +124,20 @@ class loadFolders: #creates a class to load folders within the given path for tr
             for l in self.biglist: #for l in biglist
                 while True: 
                     if l == self.archive: #if l is archive
-                        print('length ' + str(len(l)))
+                        type = 'Archives'
                         if len(l) == 0:
                             break
                         else:
-                            self.l = l
-                            
-                            print('The folder being translated is Archives. The files in this folder are:') #create label widget saying that and listing files
-                            
-                            
-                            for f in l: #for each entry in l
-                                n = int(l.index(f)) + 1
-                                name = str(str(n) + '. ' + str(f)) #file name is the path + number beforehand
-                                print(name)  #creates label so files are listed
-                                
- 
-                        
-                        
+                            show_folders(l, type)  
                         
                     elif l == self.monument:
-                        print('length ' + str(len(l)))
+                        type = 'Monuments'
                         if len(l) == 0:
                             break
                         else:
-                            self.l = l
-                            print('The folder being translated is Monuments. The files in this folder are:')
-                            
-                            for f in l: #same as previous
-                                n = int(l.index(f)) + 1
-                                name = str(str(n) + '. ' + str(f))
-                                print(name)
+                            show_folders(l, type)
                                   
-                        
+
                     else:
                         continue
                         
@@ -182,7 +145,7 @@ class loadFolders: #creates a class to load folders within the given path for tr
                     global remove  #makes remo global so it can be called in other functions         
                     remove = str(input("\n If you want to remove any spreadsheets, enter the corresponding numbers here separated by comma, otherwise enter N:")) 
                     if remove:
-                        self.removefiles(remove,l,data_path,ilanguage,olanguage,filetype)
+                        self.removefiles(remove,l,data_path,ilanguage,olanguage,filetype, glossfile)
                      
                     
         else: #if other types of files - PDF, DOCS
@@ -201,9 +164,9 @@ class loadFolders: #creates a class to load folders within the given path for tr
             global remy
             remy = input('If you want to remove files, enter corresponding numbers here separated by comma, otherwise enter N:')
             if remy:
-                self.removefiles(remy,l,data_path,ilanguage,olanguage,filetype)
+                self.removefiles(remy,l,data_path,ilanguage,olanguage,filetype, glossfile)
                 
-    def removefiles(self, remove, l, data_path, ilanguage, olanguage, filetype):
+    def removefiles(self, remove, l, data_path, ilanguage, olanguage, filetype, glossfile):
         '''
         This allows the user to remove any files they want by listing their index - this is useful for files that have already been translated, or that you know have problems, or want to avoid for whatever reason
         The program currently successfully iterates through at least 3 - 4 files. If the program ends up being slow, it might be worth running the shorter-entry files to showcase that it is working
@@ -211,7 +174,7 @@ class loadFolders: #creates a class to load folders within the given path for tr
         #testff = tk.Label(master=framea, text = str(remove) + 'works')
         #testff.pack(fill= tk.X, side = tk.TOP)
         if str(remove) == 'N': #if No files are to be removed
-            self.inputs(ilanguage, olanguage, filetype) #move to input_window
+            self.inputs(ilanguage, olanguage, filetype, glossfile) #move to input_window
         elif str(remove) == '': #if it's a blank (clicked OK by accident)
             self.runtransl(ilanguage, olanguage, data_path, filetype) #rerun the window
         else: #otherwise
@@ -221,23 +184,23 @@ class loadFolders: #creates a class to load folders within the given path for tr
                 for r in rem: #for r in the split string
                     del l[int(r) - int(i)] #delete the file from list using its index calculated by subtracting i from the number given (because the index will update due to deletion i needs to be updated as well)
                     i += 1 #because every time a file is deleted the remaining indices are updated i has to be updated as well
-                self.runtransl(ilanguage, olanguage, data_path, filetype) #runs window with updated files
+                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile) #runs window with updated files
             elif str(remove).isdigit() == True:
                 del l[int(str(remove)) - 1]
-                self.runtransl(ilanguage, olanguage, data_path, filetype)
+                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile)
             else:
                 print('Invalid Input')
-                self.runtransl(ilanguage, olanguage, data_path, filetype)
+                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile)
             
-    def inputs (self,ilanguage,olanguage,filetype):
+    def inputs (self,ilanguage,olanguage,filetype, glossfile):
         sheet = input("Please enter sheet in spreadsheet (ex: 'Data Sheet'):")
         input_columns = input('Please enter columns to be translated with slash if you want them to be translated as one, and with a comma if you want them to be translated separately \n (ex: H/J will translate columns H and J and combine them; AK, A will translate columns AK and A separately)')
         output_columns = input('Enter input columns in same order/format that you did columns (if you want data from H/J to be input into I, put I first): \n Note: if same column is put in for input/output, it will enter the translated data into the same cell as untranslated and will keep both')
         start_row = input ('Enter row number from which to start translation (ex: 5 - exclude column names):')
-        self.runtransl2(ilanguage, olanguage, sheet, input_columns, output_columns, start_row, filetype)
+        self.runtransl2(ilanguage, olanguage, sheet, input_columns, output_columns, start_row, filetype, glossfile)
     
                 
-    def runtransl2(self, ilanguage, olanguage, input_sheet, input_columns, output_columns, start_row, filetype):
+    def runtransl2(self, ilanguage, olanguage, input_sheet, input_columns, output_columns, start_row, filetype, glossfile):
         
         columns = input_columns
         col_list = columns.split(',') #creates list of columns with , as the splitter
@@ -247,7 +210,7 @@ class loadFolders: #creates a class to load folders within the given path for tr
     
         columndict = dict(zip(col_list,inputs)) #zips the list of columns and inputs together so the 1st column/group of columns becomes associated with the 1st input (as key/value) and so on
         
-        self.xl_proceed(columndict, input_sheet, start_row, ilanguage, olanguage, col_list, inputs, filetype)
+        self.xl_proceed(columndict, input_sheet, start_row, ilanguage, olanguage, col_list, inputs, filetype, glossfile)
         
         '''
         
@@ -262,7 +225,7 @@ class loadFolders: #creates a class to load folders within the given path for tr
         #is wanted for the analysis
        # SQLite.analysis(SQLite, table, self.SQLcolumns) #call SQLite analysis to find number of different monuments
     
-    def xl_proceed(self, column_dict, input_sheet, start_row, ilanguage, olanguage, col_list, inputs, filetype):
+    def xl_proceed(self, column_dict, input_sheet, start_row, ilanguage, olanguage, col_list, inputs, filetype, glossfile):
         transl = TranslateRun()
         
         txt1 = 'Sheet: ' + str(input_sheet) + '\n'
@@ -337,15 +300,13 @@ class loadFolders: #creates a class to load folders within the given path for tr
         else:
             go_back()
     
-class run: 
-    def run(self, data_path, ilanguage, olanguage, filetype):
+class Begin: 
+    def modrun(self, data_path, ilanguage, olanguage, filetype, glossfile):
              #user input of data path
             #language = 'ru' #can change this to Turkmen/Uzbek/Chinese - in future will be dropdown list for user input
             
-            load = loadFolders() #the load folder class
+            load = LoadFolders() #the load folder class
             load.openfolder(data_path, filetype) #opens the folders in the data path
-            global glossfile
-            glossfile = input('Enter path for glossary (glossary.xlsx)').strip('"').strip()
-            load.runtransl(ilanguage, olanguage, data_path, filetype) #runs translation
+            load.runtransl(ilanguage, olanguage, data_path, filetype, glossfile) #runs translation
 
                      
