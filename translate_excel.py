@@ -352,7 +352,7 @@ class TranslMethods:
 class TranslateRun: #the class to run the above methods
     transl = TranslMethods() #transl is the TranslMethods class
         
-    def runn(self, filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile): #the whole translation and SQL input process with the associated variables
+    def translbegin(self, filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile): #the whole translation and SQL input process with the associated variables
         self.transl.load_data(filename, input_sheet, column_names, start_row, max_row)
         self.transl.data_check(ilanguage, olanguage, filetype, glossfile)
         self.transl.translator(ilanguage, olanguage)
@@ -369,7 +369,7 @@ class TranslateRun: #the class to run the above methods
         print('Note: If file contains forms/macros you will need to manually close/log into these when they pop-up during entry')
         
         
-        self.runn(filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile)
+        self.translbegin(filename, input_sheet, column_names, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile)
         self.transl.reset()
     
         
