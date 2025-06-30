@@ -166,7 +166,7 @@ class LoadFolders: #creates a class to load folders within the given path for tr
         #testff = tk.Label(master=framea, text = str(remove) + 'works')
         #testff.pack(fill= tk.X, side = tk.TOP)
         if str(remy) == 'N': #if No files are to be removed
-            self.xl_proceed(sheet, start_row, ilanguage, olanguage, input_column, output, filetype, glossfile)
+            self.xl_proceed(sheet, start_row, ilanguage, olanguage, input_column, output, filetype, glossfile, data_path)
         elif str(remy) == '': #if it's a blank (clicked OK by accident)
             self.runtransl(ilanguage, olanguage, data_path, filetype,sheet, input_column, output, start_row) #rerun the window
         else: #otherwise

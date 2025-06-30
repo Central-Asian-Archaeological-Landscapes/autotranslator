@@ -258,11 +258,11 @@ class TranslMethods:
                 n= n+1
                 self.counter2_txt = str(n) + ' entries translated'
                 print(self.counter2_txt)
-                print("If it's not proceeding, check if Excel has opened the file because it contains macros, click 'x' on the macros to access the spreadsheet and program will resume")
-                 #so progress can be checked - and can see if it gets stuck on any particular entries
+                     #so progress can be checked - and can see if it gets stuck on any particular entries
                 #print(transltxt) #optional - can uncheck to see the translated results
                 #print('translating2')
                 #print(i + '\n \n' + transltxt +'\n \n')
+            print("If it's not proceeding, check if Excel has opened the file because it contains macros, click 'x' on the macros to access the spreadsheet and program will resume")
         except Exception as e: #except if there is an error 
             self.err_txt = str(traceback.print_exc())
             print(str(traceback.print_exc()))

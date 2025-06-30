@@ -15,14 +15,14 @@ def init():
     project_folder = os.path.split(os.path.dirname(os.path.abspath(__file__)))[0]
        
     parser.add_argument('-d', '--data_path', type=str, required=True, help='Path to folder/file with data to translate')
-    parser.add_argument('-i', '--ilanguage', type=str, choices=['ru', 'en'], default='ru', required=True, help="Language of the input data (options: 'ru', 'en')")
-    parser.add_argument('-l', '--olanguage', type=str, default='en', required=True, help='Language to translate the data into')
-    parser.add_argument('-g', '--glossfile', type=str, default='glossary.xlsx"',required=True, help='Path to the glossary file (e.g., glossary.xlsx)')
+    parser.add_argument('-i', '--ilanguage', type=str, choices=['ru', 'en'], default='ru', help="Language of the input data (options: 'ru', 'en')")
+    parser.add_argument('-l', '--olanguage', type=str, default='en', help='Language to translate the data into')
+    parser.add_argument('-g', '--glossfile', type=str, default='glossary.xlsx', help='Path to the glossary file (e.g., glossary.xlsx)')
 
     parser.add_argument('-s', '--sheet', type=str, choices=['Monuments', 'Archive', 'Other'], default ='Archive',required=True, help='Sheet name to translate')
     parser.add_argument('-c','--input', nargs ='+', type=str, required=True, help='The columns to be translated')
     parser.add_argument('-o', '--output', nargs='+', type=str, required=True, help='The columns to insert translated data into. Please type in corresponding order to input columns')
-    parser.add_argument('-r', '--start_row', type=int, default=5, required=True, help='Row to start translation from (excluding column names, default: 5)')
+    parser.add_argument('-r', '--start_row', type=int, default=5, help='Row to start translation from (excluding column names, default: 5)')
     args = parser.parse_args()
         
     if args.sheet == 'Monuments':
@@ -35,7 +35,6 @@ def init():
     gloss_path = os.path.join(os.path.dirname(project_folder), args.glossfile)
     if not os.path.exists(gloss_path):
         raise FileNotFoundError(f"Glossary file not found at {gloss_path}. Please provide a valid path.")
- 
     filetype = 'Excel'  # fixed as per original function
     print(gloss_path)
 #
