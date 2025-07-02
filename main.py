@@ -97,13 +97,13 @@ def init():
     Begin.modrun(
         self=None,
         data_path=args.data_path,
-        ilanguage=args.ilanguage,
-        olanguage=args.olanguage,
+        ilanguage=args.input_language,
+        olanguage=args.output_language,
         filetype=filetype,
         glossfile=args.glossfile,
         sheet=sheet,
-        input_column=args.input,
-        output_column=args.output,
+        input_column=args.input_columns,
+        output_column=args.output_columns,
         start_row=args.start_row,
     )
 
