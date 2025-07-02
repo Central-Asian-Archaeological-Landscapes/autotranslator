@@ -24,16 +24,16 @@ def init():
         help="Path to folder/file with data to translate",
     )
     parser.add_argument(
-        "-i",
-        "--ilanguage",
+        "-il",
+        "--input_language",
         type=str,
         choices=["ru", "en"],
         default="ru",
         help="Language of the input data (options: 'ru', 'en')",
     )
     parser.add_argument(
-        "-l",
-        "--olanguage",
+        "-ol",
+        "--output_language",
         type=str,
         default="en",
         help="Language to translate the data into",
@@ -56,16 +56,16 @@ def init():
         help="Sheet name to translate",
     )
     parser.add_argument(
-        "-c",
-        "--input",
+        "-ic",
+        "--input_columns",
         nargs="+",
         type=str,
         required=True,
         help="The columns to be translated",
     )
     parser.add_argument(
-        "-o",
-        "--output",
+        "-oc",
+        "--output_columns",
         nargs="+",
         type=str,
         required=True,
