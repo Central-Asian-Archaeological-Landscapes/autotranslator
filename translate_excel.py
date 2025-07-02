@@ -242,7 +242,7 @@ class TranslMethods:
                     self.checked_untrans.append(fin) #appends to checked untranslated
                     n=n+1
                     self.counter1_txt = str(n) + ' entries checked'
-                    print(self.counter1_txt)
+                    #print(self.counter1_txt)
                 
     def translator (self, ilanguage, olanguage):
         
@@ -258,10 +258,11 @@ class TranslMethods:
                 n= n+1
                 self.counter2_txt = str(n) + ' entries translated'
                 print(self.counter2_txt)
-                 #so progress can be checked - and can see if it gets stuck on any particular entries
+                     #so progress can be checked - and can see if it gets stuck on any particular entries
                 #print(transltxt) #optional - can uncheck to see the translated results
                 #print('translating2')
                 #print(i + '\n \n' + transltxt +'\n \n')
+            print("If it's not proceeding, check if Excel has opened the file because it contains macros, click 'x' on the macros to access the spreadsheet and program will resume")
         except Exception as e: #except if there is an error 
             self.err_txt = str(traceback.print_exc())
             print(str(traceback.print_exc()))
@@ -270,7 +271,7 @@ class TranslMethods:
                                     #'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_3) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/35.0.1916.47 Safari/537.36'}
                                    # INTO deep translator's google_trans translate function in response = requests.get on line 117 ''')
  
-        #print("If it's not proceeding, check if Excel has opened the file because it contains macros, click 'x' on the macros to access the spreadsheet and program will resume")    
+        print("If it's not proceeding, check if Excel has opened the file because it contains macros, click 'x' on the macros to access the spreadsheet and program will resume")    
             
     def combinedata(self, column_names, input_column):
         '''
