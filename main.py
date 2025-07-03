@@ -62,14 +62,6 @@ def init():
         default="",
         help="The columns to be translated, default for 'Archives' is C, E, G, H, J; for 'Monuments' is B, C, D",
     )
-    """parser.add_argument(
-        "-oc",
-        "--output_columns",
-        nargs="+",
-        type=str,
-        required=True,
-        help="The columns to insert translated data into. Please type in corresponding order to input columns", 
-    )"""  # Removed as not needed for CSV output
     parser.add_argument(
         "-r",
         "--start_row",
@@ -101,7 +93,7 @@ def init():
         raise FileNotFoundError(
             f"Glossary file not found at {gloss_path}. Please provide a valid path."
         )
-    filetype = str(args.sheet)  # fixed as per original function
+    filetype = str(args.sheet)
     print(gloss_path)
     print(columns)
     #
@@ -114,7 +106,6 @@ def init():
         glossfile=args.glossfile,
         sheet=sheet,
         input_column=columns,
-        # output_column=args.output_columns,
         start_row=args.start_row,
     )
 
