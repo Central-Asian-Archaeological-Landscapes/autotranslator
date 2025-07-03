@@ -247,9 +247,7 @@ class TranslMethods:
                             ).lower()[
                                 2:-2
                             ]  # the replacement string which contains the English translation of the Russian key - lowercased as the whole string will be
-                            if (
-                                fn.fnmatch(un, str(pattern)) == True
-                            ):  # fnmatch automatically casematches, so lowers un and the pattern - if there is a match, so if boolean = True
+                            if fn.fnmatch(un, str(pattern)):
                                 reps.append(
                                     str(replacement)
                                 )  # then append the replacement value to reps
@@ -271,9 +269,7 @@ class TranslMethods:
                         for key in gloss:
                             pattern = "*" + str(gloss[key]).lower() + "*"
                             replacement = str(key).lower()[2:-2]
-                            if (
-                                fn.fnmatch(un.lower(), str(pattern)) == True
-                            ):  # fnmatch automatically casematches, so lowers un and the pattern - if there is a match, so if boolean = True
+                            if fn.fnmatch(un.lower(), str(pattern)):
                                 reps.append(
                                     str(replacement)
                                 )  # then append the replacement value to reps
@@ -307,7 +303,7 @@ class TranslMethods:
                     the list of words in a sentence is only 1 character (which should only be with initials) and capitalising that
                     I will continue looking for ways to improve on this but this is the most thorough one I have come up with.
                     """
-                    if capitalise == True:  # if capitalize is set to True from earlier
+                    if capitalise:  # if capitalize is set to True from earlier
                         caps = newstring.strip().title()  # then caps is the newstring with every word capitalised (.title())
                         # print(newstring)
                         untrans_data[key] = caps
@@ -486,7 +482,7 @@ class TranslMethods:
             )  # the cell is the string combination of input_column and row - need to convert row to string so it can be concatenated with column string
             # allowing you to define which cell the data is going in
             # print(cell)
-            if self.combine == False:
+            if not self.combine:
                 sheet.range(cell).value = self.translated[
                     i
                 ]  # the xw command for writing into a cell where value is defined as i in translated
