@@ -16,6 +16,7 @@ import pandas as pd
 import fnmatch as fn
 from pathlib import Path
 import traceback
+from csv import QUOTE_ALL
 
 
 class TranslMethods:
@@ -446,6 +447,18 @@ class TranslMethods:
                     combined_data[col] = (
                         item  # adds the translated data to the dictionary
                     )
+            # remove new lines from the combined data
+            replace_dict = {
+                "\n": " ",
+                "“": "'",
+                "”": "'",
+                '"': "'",
+            }
+            for key, value in combined_data.items():
+                if isinstance(value, str):
+                    for old, new in replace_dict.items():
+                        value = value.replace(old, new)
+                    combined_data[key] = value
 
             final_data = {
                 "Title": str(combined_data["CAAL_ID"])
@@ -508,7 +521,13 @@ class TranslMethods:
             parents=True, exist_ok=True
         )  # Ensure the output directory exists
         csv_path = output_dir / csv_file
-        df.to_csv(csv_path, index=False, encoding="utf-8-sig")
+        df.to_csv(
+            csv_path,
+            index=False,
+            encoding="utf-8-sig",
+            sep=";",
+            quoting=QUOTE_ALL,
+        )
         print("Successfully produced CSV")
 
     def reset(
