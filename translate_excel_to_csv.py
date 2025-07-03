@@ -14,7 +14,6 @@ from deep_translator import (
 import xlwings as xw
 import pandas as pd
 import fnmatch as fn
-import os
 from pathlib import Path
 import traceback
 
@@ -50,8 +49,8 @@ class TranslMethods:
     ]
 
     def load_data(self, filename, input_sheet, input_column, start_row, max_row):
-        modulepath = os.path.dirname(xw.__file__)
-        print(modulepath)
+        # modulepath = os.path.dirname(xw.__file__)
+        # print(modulepath)
         max_row = 10  # FOR TESTING ONLY - REMEMBER TO UNDO AFTERWARDS (sets max to 5 so can run through code faster)
         col = ",".join(
             input_column
