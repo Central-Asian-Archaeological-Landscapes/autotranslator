@@ -50,16 +50,13 @@ class TranslMethods:
     ]
 
     def load_data(self, filename, input_sheet, input_column, start_row, max_row):
-        # modulepath = os.path.dirname(xw.__file__)
-        # print(modulepath)
-        max_row = 10  # FOR TESTING ONLY - REMEMBER TO UNDO AFTERWARDS (sets max to 5 so can run through code faster)
-        col = ",".join(
-            input_column
-        )  # joins column names as a string with , - needed to set the columns for the dataframe
-        # print('max row' + str(max_row))
-        rows = int(
-            int(max_row) - int(start_row)
-        )  # number of rows is max_row minus start row - b/c max row refers to all of the filled
+        modulepath = os.path.dirname(xw.__file__)
+        print(modulepath)
+        #max_row = 10 #FOR TESTING ONLY - REMEMBER TO UNDO AFTERWARDS (sets max to 5 so can run through code faster)
+        col = ','.join(input_column) #joins column names as a string with , - needed to set the columns for the dataframe
+        #print('max row' + str(max_row))
+        rows = int(int(max_row) - int(start_row)) #number of rows is max_row minus start row - b/c max row refers to all of the filled 
+
         self.rows = rows
 
         self.ldat_txt = (
