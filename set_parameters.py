@@ -6,10 +6,8 @@ Created on 18 Dec 2021
 
 
 from translate_excel_to_csv import TranslateRun
-import os
 import pandas as pd
 import traceback
-import threading
 import sys
 from pathlib import Path
 
