@@ -7,6 +7,7 @@ Created on 19 Jun 2022
 import argparse
 from set_parameters import Begin
 import pathlib
+from pathlib import Path
 
 
 def init():
@@ -77,6 +78,15 @@ def init():
         default=5,
         help="Row to start translation from (excluding column names, default: 5)",
     )
+
+    parser.add_argument(
+        "-od", 
+        "--output_directory",
+        type=Path,
+        default=Path.cwd(),
+        help="Path to CSV output directory",
+    )
+
     args = parser.parse_args()
     if args.sheet == "Monuments":
         sheet = "Data Sheet"
@@ -113,6 +123,7 @@ def init():
         input_column=columns,
         #output_column=args.output_columns,
         start_row=args.start_row,
+        output_dir=args.output_directory
     )
 
 

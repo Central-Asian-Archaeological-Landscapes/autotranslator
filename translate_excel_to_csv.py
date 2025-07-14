@@ -367,15 +367,15 @@ class TranslMethods:
         wb.save() #saves the changes
         wb.close() #closes the workbook to allow next columns to be translated
  
-    def dict_to_csv(self, filename):
+    def dict_to_csv(self, filename, output_dir):
         csv_file = str(Path(filename).stem) + '_translated_data.csv' #the name of the csv file to be created
-        df = pd.DataFrame(self.list_combined)
+        df = pd.DataFrame(self.list_combined) #creates dataframe of combined data
         print(self.list_combined)
         # Save to CSV
-        output_dir = Path.home() / 'Downloads' / 'test_translation'
-        output_dir.mkdir(parents=True, exist_ok=True)  # Ensure the output directory exists
-        csv_path = output_dir / csv_file
-        df.to_csv(csv_path, index=False, encoding='utf-8-sig')
+        output_folder = output_dir / 'translated_csv' #creates folder in output_directory for translated csvs
+        output_folder.mkdir(parents=True, exist_ok=True)  # Ensure the output directory exists
+        csv_path = output_folder / csv_file #creates csv path
+        df.to_csv(csv_path, index=False, encoding='utf-8-sig') #makes csv file
         print('Successfully produced CSV')
 
 
@@ -398,25 +398,25 @@ class TranslMethods:
 class TranslateRun: #the class to run the above methods
     transl = TranslMethods() #transl is the TranslMethods class
         
-    def runn(self, filename, input_sheet, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile): #the whole translation and SQL input process with the associated variables
+    def runn(self, filename, input_sheet, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile, output_dir): #the whole translation and SQL input process with the associated variables
         self.transl.load_data(filename, input_sheet, input_column, start_row, max_row)
         #self.transl.data_check(ilanguage, olanguage, filetype, glossfile)
         self.transl.translator(ilanguage, olanguage, filetype)
         self.transl.combinedata()
         #self.transl.input_data(filename, input_sheet, input_column, start_row, max_row)
-        self.transl.dict_to_csv(filename)
+        self.transl.dict_to_csv(filename, output_dir)
     
     def SQLinput(self, filename, folder, input_sheet, tables, data_cols, max_row):
         self.transl.sql_work(filename, folder, input_sheet, tables, data_cols, max_row)
         
     
-    def runtransl(self, filename, input_sheet, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile):
+    def runtransl(self, filename, input_sheet, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile, output_dir):
 
         print('Now translating: ' + str(filename) + '\n Columns: ' + str(input_column))
         print('Note: If file contains forms/macros you will need to manually close/log into these when they pop-up during entry')
         
         
-        self.runn(filename, input_sheet, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile)
+        self.runn(filename, input_sheet, input_column, start_row, max_row, ilanguage, olanguage, filetype, glossfile, output_dir)
         self.transl.reset()
     
         

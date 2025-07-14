@@ -11,6 +11,7 @@ import pandas as pd
 import traceback
 import threading
 import sys
+from pathlib import Path
 
 
 class LoadFolders: #creates a class to load folders within the given path for translation of all files within that folder
@@ -21,12 +22,12 @@ class LoadFolders: #creates a class to load folders within the given path for tr
     l = None
     
     def sortfolder(self, data_path, filetype, folder):
-        if '.xl' in str(data_path):
-            folder.append(str(data_path))
+        p = Path(data_path)
+        if '.xl' in p.name:
+            folder.append(str(p))
         else:
-            for dirpath, subdirs, files in os.walk(data_path):
-                for f in files:
-                    file_path = os.path.join(dirpath, f)
+            for file_path in p.rglob('*'):
+                if file_path.is_file():
                     folder.append(str(file_path))
 
     def openfolder(self, data_path, filetype): 
@@ -34,59 +35,47 @@ class LoadFolders: #creates a class to load folders within the given path for tr
         This function is the first to be executed in the program as it locates the folders from the specified data path, accesses the files within them, and extracts the file paths to the specified lists (optional ultimately
         but useful for this group of spreadsheets). The file paths can then be used to access individual files for translation.
         '''
-        if '"' in str(data_path):
-            data_path = str(data_path).replace('"', '')
-            
-        else:
-            pass
-            
-        if filetype == 'Archive' or filetype == 'Monument' or filetype == 'Excel': #if the file type is Archive or Monument or Excel
-                if 'archive' in str(data_path).lower():
-                    folder = self.archive
-                    self.sortfolder(data_path,filetype,folder)
-                    
-                elif 'monument' in str(data_path).lower():
-                    folder = self.monument
-                    self.sortfolder(data_path, filetype,folder)
-                        
-                else:
-                    for data_path, subdirs, files in os.walk(data_path):
-                        for s in subdirs: #for each subdirectory
-                            dirpath = os.path.join(data_path, s) #creates a directory path to add the file name to for a complete file path
-                            print(dirpath)
-                            if 'archive' in str(dirpath).lower(): #if 'ARCHIVE' is in the subdirectory name
-                                folder = self.archive
-                                self.sortfolder(dirpath, filetype, folder)
-                                        
-                            elif 'monument' in str(dirpath).lower(): #otherwise if 'MONUMENT' is in the subdirectory path:
-                                folder = self.monument
-                                self.sortfolder(dirpath, filetype, folder)
-                                
-                            else: #otherwise continue
-                                pass
-        else:
-            if '.docx' in str(data_path) or '.pdf' in str(data_path):
-                self.docs.append(data_path)
-                dirpath = os.path.dirname(data_path)
-                self.dirpath = dirpath
+        p = Path(str(data_path).replace('"',''))
+        
+        if filetype in ['Archive', 'Monument', 'Excel']:
+            if 'archive' in p.name.lower():
+                folder = self.archive
+                self.sortfolder(p, filetype, folder)
+            elif 'monument' in p.name.lower():
+                folder = self.monument
+                self.sortfolder(p, filetype, folder)
             else:
-                for data_path, subdirs, files in os.walk(data_path):
-                    if len(list(subdirs)) >0:
-                        for s in subdirs:
-                            dirpath = os.path.join(data_path, s)
-                            self.dirpath = dirpath
-                            for dirpath, files in os.walk(dirpath):
-                                for file in files:
-                                    file_path = os.path.join(dirpath, file)
+                for subdir in p.rglob('*'):
+                    #print('subdir: ' + str(subdir)) #test that this is working
+                    if subdir.is_dir():
+                        if 'archive' in subdir.name.lower():
+                            folder = self.archive
+                            self.sortfolder(subdir, filetype, folder)
+                        elif 'monument' in subdir.name.lower():
+                            folder = self.monument
+                            self.sortfolder(subdir, filetype, folder)
+                        else:
+                            pass   
+        else:
+            if p.suffix in ['.docx', '.pdf']:
+                self.docs.append(str(p))
+                self.dirpath = str(p.parent)
+            else:
+            # Walk subdirectories and files
+                if any(subdir.is_dir() for subdir in p.iterdir()):
+                    for subdir in p.iterdir():
+                        if subdir.is_dir():
+                            self.dirpath = str(subdir)
+                            for file_path in subdir.rglob('*'):
+                                if file_path.is_file():
                                     self.docs.append(str(file_path))
-                    else:
-                        for file in files:
-                            self.dirpath = data_path
-                            file_path = os.path.join(data_path, file)
+                else:
+                    for file_path in p.iterdir():
+                        if file_path.is_file():
+                            self.dirpath = str(p)
                             self.docs.append(str(file_path))
-                    
              
-    def runtransl(self, ilanguage, olanguage, data_path, filetype, glossfile, sheet, input_column, start_row): #runs the translation methods defined in the translate module
+    def runtransl(self, ilanguage, olanguage, data_path, filetype, glossfile, sheet, input_column, start_row, output_dir): #runs the translation methods defined in the translate module
             
         def show_folders(l, type):
             print('length ' + str(len(l)))
@@ -127,7 +116,7 @@ class LoadFolders: #creates a class to load folders within the given path for tr
                       #makes remo global so it can be called in other functions         
                     remy = str(input("\n If you want to remove any spreadsheets, enter the corresponding numbers here separated by comma, otherwise enter N:")) 
                     if remy:
-                        self.removefiles(remy,l,data_path,ilanguage,olanguage,filetype, glossfile, sheet, input_column, start_row)
+                        self.removefiles(remy,l,data_path,ilanguage,olanguage,filetype, glossfile, sheet, input_column, start_row, output_dir)
                      
                     
         else: #if other types of files - PDF, DOCS
@@ -144,9 +133,9 @@ class LoadFolders: #creates a class to load folders within the given path for tr
     
             remy = input('If you want to remove files, enter corresponding numbers here separated by comma, otherwise enter N:')
             if remy:
-                self.removefiles(remy,l,data_path,ilanguage,olanguage,filetype, glossfile,sheet, input_column, start_row)
+                self.removefiles(remy,l,data_path,ilanguage,olanguage,filetype, glossfile,sheet, input_column, start_row, output_dir)
                 
-    def removefiles(self, remy, l, data_path, ilanguage, olanguage, filetype, glossfile, sheet, input_column, start_row):
+    def removefiles(self, remy, l, data_path, ilanguage, olanguage, filetype, glossfile, sheet, input_column, start_row, output_dir):
         '''
         This allows the user to remove any files they want by listing their index - this is useful for files that have already been translated, or that you know have problems, or want to avoid for whatever reason
         The program currently successfully iterates through at least 3 - 4 files. If the program ends up being slow, it might be worth running the shorter-entry files to showcase that it is working
@@ -154,9 +143,9 @@ class LoadFolders: #creates a class to load folders within the given path for tr
         #testff = tk.Label(master=framea, text = str(remove) + 'works')
         #testff.pack(fill= tk.X, side = tk.TOP)
         if str(remy) == 'N': #if No files are to be removed
-            self.xl_proceed(sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path)
+            self.xl_proceed(sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path, output_dir)
         elif str(remy) == '': #if it's a blank (clicked OK by accident)
-            self.runtransl(ilanguage, olanguage, data_path, filetype,sheet, input_column, start_row) #rerun the window
+            self.runtransl(ilanguage, olanguage, data_path, filetype,sheet, input_column, start_row, output_dir) #rerun the window
         else: #otherwise
             if ',' in str(remy): #if , is in the string
                 rem = remy.split(',') #split values by presence of comma
@@ -164,13 +153,13 @@ class LoadFolders: #creates a class to load folders within the given path for tr
                 for r in rem: #for r in the split string
                     del l[int(r) - int(i)] #delete the file from list using its index calculated by subtracting i from the number given (because the index will update due to deletion i needs to be updated as well)
                     i += 1 #because every time a file is deleted the remaining indices are updated i has to be updated as well
-                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile,sheet, input_column, start_row) #runs window with updated files
+                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile,sheet, input_column, start_row, output_dir) #runs window with updated files
             elif str(remy).isdigit() == True:
                 del l[int(str(remy)) - 1]
-                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile,sheet, input_column, start_row)
+                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile,sheet, input_column, start_row, output_dir)
             else:
                 print('Invalid Input')
-                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile,sheet, input_column, start_row)    
+                self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile,sheet, input_column, start_row, output_dir)    
                 
 
         '''
@@ -186,7 +175,7 @@ class LoadFolders: #creates a class to load folders within the given path for tr
         #is wanted for the analysis
        # SQLite.analysis(SQLite, table, self.SQLcolumns) #call SQLite analysis to find number of different monuments
 
-    def edit_inputs(self, input_sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path):
+    def edit_inputs(self, input_sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path, output_dir):
         sheet_in = input("Enter 'arg' to keep same input, or enter sheet in spreadsheet (ex: 'Data Sheet'):")
         input_col_in = input('Enter "arg" to keep same input or enter columns to be translated separated by space')
         '''output_col_in = input('Enter "arg" to keep same input or enter columns into which translated data is put')''' 
@@ -211,9 +200,9 @@ class LoadFolders: #creates a class to load folders within the given path for tr
         else:
             sheet = input_sheet
 
-        self.xl_proceed(sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path)
+        self.xl_proceed(sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path, output_dir)
     
-    def xl_proceed(self, input_sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path):
+    def xl_proceed(self, input_sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path, output_dir):
         
         transl = TranslateRun()
         
@@ -251,23 +240,31 @@ class LoadFolders: #creates a class to load folders within the given path for tr
             
                     else:
                         #print('working')
-                        transl.runtransl(file, input_sheet, input_column, int(start_row), int(max_row), ilanguage, olanguage, filetype, glossfile)
+                        transl.runtransl(file, input_sheet, input_column, int(start_row), int(max_row), ilanguage, olanguage, filetype, glossfile, output_dir)
                         #transl.SQLinput(file, self.folder, input_sheet, self.tables, data_cols, max_row)
                     
                 for l in self.biglist:
                     l.clear()
                 print('Successful - rerun for next folder')
            
+            except PermissionError:
+                print('If Permission Error check permissions on files and tick "allowed to edit" for everyone or check that files are closed')
+                    
+                reset = str(input("Reset? Y/N:"))
+                if reset == 'Y':
+                    self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile, input_sheet, input_column, start_row)
+                else:
+                    sys.exit(1)
                     
             except Exception as e:
-                    print ('ERROR:' + str(e) + ' ' + str(e.args) + '/n' + str(traceback.print_exc(limit=None, file=None, chain=True)))
-                    print('If Permission Error check permissions on files and tick "allowed to edit" for everyone or check that files are closed')
-            
-                    reset = str(input("Reset? Y/N:"))
-                    if reset == 'Y':
-                        self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile, input_sheet, input_column, start_row)
-                    else:
-                        sys.exit(1)
+                print ('ERROR:' + str(e) + ' ' + str(e.args) + '/n' + str(traceback.print_exc(limit=None, file=None, chain=True)))
+
+                reset = str(input("Reset? Y/N:"))
+                if reset == 'Y':
+                    self.runtransl(ilanguage, olanguage, data_path, filetype, glossfile, input_sheet, input_column, start_row)
+                else:
+                    sys.exit(1)
+                    
                         
                 
         proceed = str(input('\n Confirm Y to continue, N to go back:'))
@@ -283,12 +280,12 @@ class LoadFolders: #creates a class to load folders within the given path for tr
             self.edit_inputs(input_sheet, start_row, ilanguage, olanguage, input_column, filetype, glossfile, data_path)
     
 class Begin: 
-    def modrun(self, data_path, ilanguage, olanguage, filetype, glossfile, sheet, input_column, start_row):
+    def modrun(self, data_path, ilanguage, olanguage, filetype, glossfile, sheet, input_column, start_row, output_dir):
              #user input of data path
             #language = 'ru' #can change this to Turkmen/Uzbek/Chinese - in future will be dropdown list for user input
             
             load = LoadFolders() #the load folder class
             load.openfolder(data_path, filetype) #opens the folders in the data path
-            load.runtransl(ilanguage, olanguage, data_path, filetype, glossfile, sheet, input_column, start_row) #runs translation
+            load.runtransl(ilanguage, olanguage, data_path, filetype, glossfile, sheet, input_column, start_row, output_dir) #runs translation
 
                      
