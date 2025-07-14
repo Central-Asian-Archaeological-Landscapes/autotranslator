@@ -20,7 +20,7 @@ def init():
         "-d",
         "--data_path",
         type=str,
-        default=r"C:\Users\turch\OneDrive\Documents\0CAAL\KG",
+        default=str(current_file_location / "data"),
         help="Path to folder/file with data to translate",
     )
     parser.add_argument(
@@ -62,14 +62,6 @@ def init():
         default="",
         help="The columns to be translated, default for 'Archives' is C, E, G, H, J; for 'Monuments' is B, C, D",
     )
-    '''parser.add_argument(
-        "-oc",
-        "--output_columns",
-        nargs="+",
-        type=str,
-        required=True,
-        help="The columns to insert translated data into. Please type in corresponding order to input columns", 
-    )''' # Removed as not needed for CSV output
     parser.add_argument(
         "-r",
         "--start_row",
@@ -81,24 +73,27 @@ def init():
     if args.sheet == "Monuments":
         sheet = "Data Sheet"
         if not args.input_columns:
-            columns = ['B', 'C', 'D',]
-        else: 
+            columns = [
+                "B",
+                "C",
+                "D",
+            ]
+        else:
             columns = args.input_columns
     elif args.sheet == "Archive":
         sheet = "2.Описание"
         if not args.input_columns:
-            columns = ['C', 'E', 'G', 'H', 'J']
+            columns = ["C", "E", "G", "H", "J"]
         else:
             columns = args.input_columns
     else:
         sheet = input("Please enter name of the sheet to translate: ")
 
-
     if not gloss_path.exists():
         raise FileNotFoundError(
             f"Glossary file not found at {gloss_path}. Please provide a valid path."
         )
-    filetype = str(args.sheet)  # fixed as per original function
+    filetype = str(args.sheet)
     print(gloss_path)
     print(columns)
     #
@@ -111,7 +106,6 @@ def init():
         glossfile=args.glossfile,
         sheet=sheet,
         input_column=columns,
-        #output_column=args.output_columns,
         start_row=args.start_row,
     )
 
